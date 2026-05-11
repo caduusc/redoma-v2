@@ -82,7 +82,7 @@ export async function runStateMachine({ user, session, intent, messageText }: P)
       // 5. Salva o link rastreável no banco
       const generated = await createGeneratedLink({
         userId: user.id,
-        institutionId: user.institution_id ?? null,
+        institutionId: null,
         partnerStoreId: store?.id ?? null,
         originalUrl: productUrl,
         affiliateUrl: affiliateResult.affiliateLink,
