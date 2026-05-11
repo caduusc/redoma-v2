@@ -95,7 +95,7 @@ export async function runStateMachine({ user, session, intent, messageText }: P)
       return [
         `🔗 Seu link está pronto!${storeName}\n\n`,
         `${generated.short_url}\n\n`,
-        '✅ Compre por esse link e sua instituição recebe impacto!\n',
+        '✅ Compre por esse link e a instituição escolhida receberá até 5% de apoio!\n',
         '_O link tem duração de 24 horas._\n\n',
         'Digite *MENU* para ver outras opções.',
       ].join('');
