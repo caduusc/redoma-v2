@@ -57,7 +57,7 @@ export async function handleIncomingWhatsAppMessage({
 
       await sendWhatsAppMessage({
         to: phoneNormalized,
-        body: `Prazer, ${name}! 🎉\n\nAgora é só me enviar o link de qualquer produto do Mercado Livre, Amazon ou Shopee — eu gero seu link de afiliado na hora! 🛍️`,
+        body: `Prazer, ${name}! 🎉\n\nAgora é só me enviar o link de qualquer produto do Mercado Livre, Amazon, Shopee, SHEIN e etc — eu gero seu novo link na hora! 🛍️`,
       });
 
       return { ok: true };
