@@ -77,9 +77,14 @@ export async function runStateMachine({ user, session, intent, messageText }: P)
         tag: null,
       });
 
-      // 4. Se o serviço falhou, avisa o usuário
+      // 4. Se o serviço falhou, avisa o usuário e notifica admins
       if (!affiliateResult.success) {
         console.error(`[URL_PRODUTO] Falha ao gerar link: ${affiliateResult.error}`);
+
+        notifyAdmins(
+          `⚠️ *Erro ao gerar link*\n*Cliente:* +${user.phone_normalized}\n*Nome:* ${user.full_name}\n*Loja:* ${marketplace}\n*Link original:* ${productUrl}\n*Erro:* ${affiliateResult.error}`
+        ).catch(console.error);
+
         return [
           '😕 Não consegui gerar seu link agora.\n\n',
           'Um atendente vai te ajudar em instantes!\n\n',
