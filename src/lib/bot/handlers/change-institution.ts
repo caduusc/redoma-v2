@@ -2,6 +2,7 @@ import { User } from '@/lib/db/users';
 import { BotSession, updateBotSession, resetBotSession } from '@/lib/db/bot-sessions';
 import {
   listActiveInstitutions,
+  searchInstitutionByNameOrSlug,
   setCurrentInstitutionForUser,
 } from '@/lib/db/institutions';
 
@@ -9,19 +10,14 @@ type P = { user: User; session: BotSession; messageText: string };
 
 export async function handleChangeInstitution({ user, session, messageText }: P): Promise<string> {
 
-  // Estado inicial — exibe lista numerada de instituições
+  // Estado inicial — exibe lista pública numerada
   if (session.current_state === 'idle') {
     const institutions = await listActiveInstitutions();
 
-    if (institutions.length === 0) {
-      return 'Não há instituições disponíveis no momento. 😕\n\nEnvie *MENU* para voltar.';
-    }
+    const list = institutions.length > 0
+      ? institutions.map((inst, i) => `*${i + 1}.* ${inst.name}`).join('\n')
+      : '_Nenhuma instituição disponível no momento._';
 
-    const list = institutions
-      .map((inst, i) => `*${i + 1}.* ${inst.name}`)
-      .join('\n');
-
-    // Salva a lista no contexto da sessão para usar na próxima mensagem
     await updateBotSession(user.id, 'awaiting_institution_choice', {
       institutions: institutions.map(i => ({ id: i.id, name: i.name })),
     });
@@ -29,24 +25,38 @@ export async function handleChangeInstitution({ user, session, messageText }: P)
     return [
       '🌱 *Escolha a instituição que deseja apoiar:*\n\n',
       list,
-      '\n\nDigite o *número* da instituição desejada.',
+      '\n\nDigite o *número* da instituição ou *escreva o nome* caso não esteja na lista.',
     ].join('');
   }
 
-  // Estado aguardando escolha do número
+  // Estado aguardando escolha
   if (session.current_state === 'awaiting_institution_choice') {
     const institutions = (session.context?.institutions as { id: string; name: string }[]) ?? [];
-    const choice = parseInt(messageText.trim(), 10);
+    const trimmed = messageText.trim();
+    const choice = parseInt(trimmed, 10);
 
-    if (isNaN(choice) || choice < 1 || choice > institutions.length) {
+    let selected: { id: string; name: string } | null = null;
+
+    // Tentativa 1 — número da lista pública
+    if (!isNaN(choice) && choice >= 1 && choice <= institutions.length) {
+      selected = institutions[choice - 1];
+    }
+
+    // Tentativa 2 — busca por nome (inclui ocultas)
+    if (!selected) {
+      const found = await searchInstitutionByNameOrSlug(trimmed);
+      if (found) selected = { id: found.id, name: found.name };
+    }
+
+    if (!selected) {
       const list = institutions.map((inst, i) => `*${i + 1}.* ${inst.name}`).join('\n');
       return [
-        `⚠️ Número inválido. Digite um número entre 1 e ${institutions.length}.\n\n`,
+        '⚠️ Não encontrei essa instituição.\n\n',
+        'Digite o *número* da lista ou tente escrever o nome completo:\n\n',
         list,
       ].join('');
     }
 
-    const selected = institutions[choice - 1];
     await updateBotSession(user.id, 'awaiting_institution_confirmation', {
       institution_id: selected.id,
       institution_name: selected.name,
