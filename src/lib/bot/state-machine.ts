@@ -16,6 +16,7 @@ import {
   findPartnerStoreByDomain,
   createGeneratedLink,
 } from '@/lib/db/generated-links';
+import { getCurrentInstitutionForUser } from '@/lib/db/institutions';
 import { env } from '@/lib/env';
 
 type P = { user: User; session: BotSession; intent: BotIntent; messageText: string };
@@ -60,11 +61,13 @@ export async function runStateMachine({ user, session, intent, messageText }: P)
 
       const { marketplace, productUrl } = detected;
 
-      // 2. Busca a loja parceira no banco (para associar ao link gerado)
-      const store = await findPartnerStoreByDomain(productUrl);
+      // 2. Busca instituição atual do usuário e loja parceira em paralelo
+      const [institution, store] = await Promise.all([
+        getCurrentInstitutionForUser(user.id),
+        findPartnerStoreByDomain(productUrl),
+      ]);
 
       // 3. Chama o serviço Python para gerar o link de afiliado real
-      //    Tag é null — sem tag por comunidade nessa versão
       const affiliateResult = await generateAffiliateLink({
         marketplace,
         productUrl,
@@ -86,20 +89,22 @@ export async function runStateMachine({ user, session, intent, messageText }: P)
       // 5. Salva o link rastreável no banco
       const generated = await createGeneratedLink({
         userId: user.id,
-        institutionId: null,
+        institutionId: institution?.id ?? null,
         partnerStoreId: store?.id ?? null,
         originalUrl: productUrl,
         affiliateUrl: affiliateResult.affiliateLink,
         appUrl: env.appUrl,
       });
 
-      // 6. Responde com o link curto
-      const storeName = store ? ` _(${store.name})_` : '';
+      // 6. Monta mensagem com nome da instituição se disponível
+      const institutionLine = institution
+        ? `Comprando por esse link, *${institution.name}* receberá até 5% do valor da compra! 💚\n\n`
+        : '✅ Compre por esse link e sua instituição recebe impacto!\n\n';
 
       return [
-        `🔗 Seu link está pronto!${storeName}\n\n`,
+        `🔗 *Seu link está pronto!*\n\n`,
         `${generated.short_url}\n\n`,
-        '✅ Compre por esse link e sua instituição recebe impacto!\n',
+        institutionLine,
         '_O link tem duração de 24 horas._\n\n',
         'Digite *MENU* para ver outras opções.',
       ].join('');
