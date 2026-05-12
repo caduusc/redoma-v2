@@ -5,17 +5,10 @@ import { getOrCreateBotSession, updateBotSession, resetBotSession } from '@/lib/
 import { saveInboundMessage, saveOutboundMessage, messageAlreadyProcessed } from '@/lib/db/whatsapp-messages';
 import { sendWhatsAppMessage } from '@/lib/whatsapp/send-message';
 import { runStateMachine } from '@/lib/bot/state-machine';
+import { notifyAdmins } from '@/lib/bot/notify-admins';
 
-type Params  = { phone: string; text: string; messageId?: string; rawPayload?: unknown };
-type Result  = { ok: boolean; intent?: string; responseText?: string; simulated?: boolean; error?: string };
-
-const ADMIN_PHONES = ['5511978060056'];
-
-async function notifyAdmins(message: string): Promise<void> {
-  await Promise.allSettled(
-    ADMIN_PHONES.map(admin => sendWhatsAppMessage({ to: admin, body: message }))
-  );
-}
+type Params = { phone: string; text: string; messageId?: string; rawPayload?: unknown };
+type Result = { ok: boolean; intent?: string; responseText?: string; simulated?: boolean; error?: string };
 
 export async function handleIncomingWhatsAppMessage({
   phone,
@@ -41,7 +34,6 @@ export async function handleIncomingWhatsAppMessage({
   // ── COLETA DE NOME (primeira vez) ────────────────────────────────────────────
   if (!user.full_name) {
     if (session.current_state === 'awaiting_name') {
-      // Usuário está respondendo com o nome
       const name = text.trim();
 
       if (name.length < 2 || /^https?:\/\//i.test(name)) {
@@ -57,13 +49,12 @@ export async function handleIncomingWhatsAppMessage({
 
       await sendWhatsAppMessage({
         to: phoneNormalized,
-        body: `Prazer, ${name}! 🎉\n\nAgora é só me enviar o link de qualquer produto do Mercado Livre, Amazon, Shopee, SHEIN e etc — eu gero seu novo link na hora! 🛍️`,
+        body: `Prazer, ${name}! 🎉\n\nAgora é só me enviar o link de qualquer produto do Mercado Livre, Amazon ou Shopee — eu gero seu link de afiliado na hora! 🛍️`,
       });
 
       return { ok: true };
     }
 
-    // Ainda não temos o nome — pede agora
     await updateBotSession(user.id, 'awaiting_name');
 
     await sendWhatsAppMessage({
@@ -87,12 +78,12 @@ export async function handleIncomingWhatsAppMessage({
     intent,
   });
 
-  // Notifica admins sobre toda mensagem recebida (após coleta de nome)
+  // Notifica admins sobre toda mensagem recebida
   notifyAdmins(
     `📩 *Nova mensagem*\n*De:* +${phoneNormalized}\n*Nome:* ${user.full_name}\n*Texto:* ${text.slice(0, 100)}`
   ).catch(console.error);
 
-  // Resposta imediata enquanto o Playwright gera o link de afiliado
+  // Resposta imediata enquanto o Playwright gera o link
   if (intent === 'URL_PRODUTO') {
     await sendWhatsAppMessage({
       to: phoneNormalized,
@@ -108,8 +99,9 @@ export async function handleIncomingWhatsAppMessage({
     responseText = 'Ocorreu um erro interno. Tente novamente.';
   }
 
-  // Notifica admins quando cair no fallback (precisa de atendimento humano)
-  if (intent === 'FALLBACK') {
+  // Notifica admins de FALLBACK apenas quando não está no meio de um fluxo ativo
+  // (evita falsos positivos de respostas como "1", "2", "sim" dentro de fluxos)
+  if (intent === 'FALLBACK' && session.current_state === 'idle') {
     notifyAdmins(
       `🚨 *Atendimento necessário*\n*Cliente:* +${phoneNormalized}\n*Nome:* ${user.full_name}\n*Mensagem:* ${text.slice(0, 100)}\n\nResponda diretamente para o número acima.`
     ).catch(console.error);

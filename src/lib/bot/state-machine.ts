@@ -8,15 +8,10 @@ import { handleStopMarketing } from '@/lib/bot/handlers/stop-marketing';
 import { handlePoints } from '@/lib/bot/handlers/points';
 import { handleChangeInstitution } from '@/lib/bot/handlers/change-institution';
 import { handleSaudacao } from '@/lib/bot/handlers/saudacao';
-import {
-  identifyMarketplace,
-  generateAffiliateLink,
-} from '@/lib/bot/marketplace';
-import {
-  findPartnerStoreByDomain,
-  createGeneratedLink,
-} from '@/lib/db/generated-links';
+import { identifyMarketplace, generateAffiliateLink } from '@/lib/bot/marketplace';
+import { findPartnerStoreByDomain, createGeneratedLink } from '@/lib/db/generated-links';
 import { getCurrentInstitutionForUser } from '@/lib/db/institutions';
+import { notifyAdmins } from '@/lib/bot/notify-admins';
 import { env } from '@/lib/env';
 
 type P = { user: User; session: BotSession; intent: BotIntent; messageText: string };
@@ -52,10 +47,19 @@ export async function runStateMachine({ user, session, intent, messageText }: P)
       const detected = identifyMarketplace(messageText);
 
       if (!detected) {
+        // Extrai a URL bruta da mensagem para incluir na notificação
+        const urlMatch = messageText.match(/https?:\/\/[^\s]+/i);
+        const rawUrl = urlMatch ? urlMatch[0] : messageText.slice(0, 100);
+
+        // Notifica admins — pode ser uma loja que vale atender manualmente
+        notifyAdmins(
+          `🛍️ *Loja não suportada*\n*Cliente:* +${user.phone_normalized}\n*Nome:* ${user.full_name}\n*Link enviado:* ${rawUrl}\n\nAtenda manualmente para não perder a venda.`
+        ).catch(console.error);
+
         return [
           '⚠️ Não reconheci essa loja ainda.\n\n',
           'Trabalhamos com *Mercado Livre*, *Amazon*, *Shopee* e *Magalu*.\n\n',
-          'Manda o link de um produto de uma dessas lojas e eu gero seu link! 🛍️',
+          'Um atendente irá te ajudar em instantes! 😊',
         ].join('');
       }
 
@@ -76,9 +80,7 @@ export async function runStateMachine({ user, session, intent, messageText }: P)
 
       // 4. Se o serviço falhou, avisa o usuário
       if (!affiliateResult.success) {
-        console.error(
-          `[URL_PRODUTO] Falha ao gerar link de afiliado: ${affiliateResult.error}`
-        );
+        console.error(`[URL_PRODUTO] Falha ao gerar link de afiliado: ${affiliateResult.error}`);
         return [
           '😕 Não consegui gerar seu link agora.\n\n',
           'Um atendente vai te ajudar em instantes!\n\n',
