@@ -58,7 +58,6 @@ export async function runStateMachine({ user, session, intent, messageText }: P)
 
         return [
           '⚠️ Não reconheci essa loja ainda.\n\n',
-          'Trabalhamos com *Mercado Livre*, *Amazon*, *Shopee* e *Magalu*.\n\n',
           'Um atendente irá te ajudar em instantes! 😊',
         ].join('');
       }
@@ -80,7 +79,7 @@ export async function runStateMachine({ user, session, intent, messageText }: P)
 
       // 4. Se o serviço falhou, avisa o usuário
       if (!affiliateResult.success) {
-        console.error(`[URL_PRODUTO] Falha ao gerar link de afiliado: ${affiliateResult.error}`);
+        console.error(`[URL_PRODUTO] Falha ao gerar link: ${affiliateResult.error}`);
         return [
           '😕 Não consegui gerar seu link agora.\n\n',
           'Um atendente vai te ajudar em instantes!\n\n',

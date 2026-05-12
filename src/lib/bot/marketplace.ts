@@ -79,7 +79,7 @@ export async function generateAffiliateLink(params: {
     });
 
     if (!res.ok) {
-      return { success: false, error: `Serviço de afiliados retornou ${res.status}` };
+      return { success: false, error: `Serviço retornou ${res.status}` };
     }
 
     const data = (await res.json()) as {
@@ -98,8 +98,8 @@ export async function generateAffiliateLink(params: {
     if (err instanceof Error && err.name === 'TimeoutError') {
       return { success: false, error: 'Tempo esgotado ao gerar link de afiliado (>45s).' };
     }
-    console.error('[marketplace] Erro ao chamar serviço de afiliados:', err);
-    return { success: false, error: 'Serviço de afiliados indisponível. Tente novamente.' };
+    console.error('[marketplace] Erro ao chamar serviço:', err);
+    return { success: false, error: 'Serviço indisponível. Tente novamente.' };
   }
 }
 
