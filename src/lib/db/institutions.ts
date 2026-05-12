@@ -2,6 +2,16 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 export type Institution = { id: string; name: string; slug: string; logo_url: string | null; description: string | null; status: string; created_at: string; updated_at: string; };
 
+export async function listActiveInstitutions(): Promise<Institution[]> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('institutions')
+    .select('*')
+    .eq('status', 'active')
+    .order('name', { ascending: true });
+  if (error) { console.error('[db/institutions]', error.message); return []; }
+  return (data as Institution[]) ?? [];
+}
+
 export async function searchInstitutionByNameOrSlug(query: string): Promise<Institution | null> {
   if (!query?.trim()) return null;
   const term = `%${query.trim()}%`;
