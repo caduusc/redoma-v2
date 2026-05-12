@@ -7,6 +7,7 @@ import { handleFallback } from '@/lib/bot/handlers/fallback';
 import { handleStopMarketing } from '@/lib/bot/handlers/stop-marketing';
 import { handlePoints } from '@/lib/bot/handlers/points';
 import { handleChangeInstitution } from '@/lib/bot/handlers/change-institution';
+import { handleSaudacao } from '@/lib/bot/handlers/saudacao';
 import {
   identifyMarketplace,
   generateAffiliateLink,
@@ -30,6 +31,9 @@ export async function runStateMachine({ user, session, intent, messageText }: P)
   }
 
   switch (intent) {
+    case 'SAUDACAO':
+      return handleSaudacao({ user });
+
     case 'AJUDA':
       return handleHelp({ user });
 
@@ -95,7 +99,7 @@ export async function runStateMachine({ user, session, intent, messageText }: P)
       return [
         `🔗 Seu link está pronto!${storeName}\n\n`,
         `${generated.short_url}\n\n`,
-        '✅ Compre por esse link e a instituição escolhida receberá até 5% de apoio!\n',
+        '✅ Compre por esse link e sua instituição recebe impacto!\n',
         '_O link tem duração de 24 horas._\n\n',
         'Digite *MENU* para ver outras opções.',
       ].join('');

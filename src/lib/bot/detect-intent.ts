@@ -6,6 +6,7 @@ export type BotIntent =
   | 'VER_PONTOS'
   | 'PARAR_MARKETING'
   | 'MENU'
+  | 'SAUDACAO'
   | 'AJUDA'
   | 'FALLBACK';
 
@@ -18,16 +19,22 @@ function normalizeText(text: string): string {
     .replace(/\s+/g, ' ');
 }
 
-// Verifica se o texto normalizado contém algum dos termos
 function matchesAny(text: string, terms: string[]): boolean {
   return terms.some(term => text === term || text.includes(term));
 }
 
+const SAUDACAO_TERMS = [
+  'oi', 'ola', 'olá', 'bom dia', 'boa tarde', 'boa noite', 'hey', 'hi', 'hello',
+  'e ai', 'eai', 'e aí', 'opa', 'tudo bem', 'td bem', 'oi bot', 'ola bot',
+  'boas', 'salve', 'oi tudo bem', 'boa', 'bom dia!', 'boa tarde!', 'boa noite!',
+  'oii', 'oiii', 'oi!', 'ola!', 'olá!', 'hey!', 'eae', 'eaee', 'ae', 'iae',
+];
+
 const TROCAR_TERMS = [
   'trocar', 'trocar instituicao', 'trocar instituição', 'mudar', 'mudar instituicao',
-  'mudar instituição', 'alterar instituicao', 'alterar instituição', 'trocar comunidade',
-  'mudar comunidade', 'alterar comunidade', 'trocar entidade', 'mudar entidade', 'trocar ong',
-  'mudar ong', 'trocar organizacao', 'mudar organizacao', 'quero trocar', 'quero mudar',
+  'mudar instituição', 'alterar instituicao', 'alterar instituição', 'trocar escola',
+  'mudar escola', 'alterar escola', 'trocar entidade', 'mudar entidade', 'trocar org',
+  'mudar org', 'trocar organizacao', 'mudar organizacao', 'quero trocar', 'quero mudar',
   'trocar minha instituicao', 'mudar minha instituicao', 'alterar minha instituicao',
   'troca instituicao', 'muda instituicao', 'change', 'trocar insttuicao', 'mudar instuicao',
 ];
@@ -50,11 +57,10 @@ const PARAR_TERMS = [
 ];
 
 const MENU_TERMS = [
-  'menu', 'inicio', 'comecar', 'começar', 'oi', 'ola', 'olá', 'bom dia', 'boa tarde',
-  'boa noite', 'hey', 'hi', 'hello', 'voltar', 'voltar ao menu', 'ver menu', 'mostrar menu',
-  'opcoes', 'opções', 'ver opcoes', 'ver opções', '0', 'home', 'start', 'iniciar',
-  'boas', 'e ai', 'eai', 'e aí', 'opa', 'tudo bem', 'td bem', 'oi bot', 'ola bot',
-  'menu principal', 'pagina inicial', 'página inicial', 'recomecar', 'recomeçar',
+  'menu', 'inicio', 'comecar', 'começar', 'voltar', 'voltar ao menu', 'ver menu',
+  'mostrar menu', 'opcoes', 'opções', 'ver opcoes', 'ver opções', '0', 'home',
+  'start', 'iniciar', 'menu principal', 'pagina inicial', 'página inicial',
+  'recomecar', 'recomeçar',
 ];
 
 const AJUDA_TERMS = [
@@ -74,11 +80,13 @@ export function detectIntent(message: string): BotIntent {
 
   const n = normalizeText(message);
 
-  if (matchesAny(n, TROCAR_TERMS))  return 'TROCAR_INSTITUICAO';
-  if (matchesAny(n, PONTOS_TERMS))  return 'VER_PONTOS';
-  if (matchesAny(n, PARAR_TERMS))   return 'PARAR_MARKETING';
-  if (matchesAny(n, MENU_TERMS))    return 'MENU';
-  if (matchesAny(n, AJUDA_TERMS))   return 'AJUDA';
+  // Saudação antes de MENU para não confundir "oi" com menu
+  if (matchesAny(n, SAUDACAO_TERMS))  return 'SAUDACAO';
+  if (matchesAny(n, TROCAR_TERMS))    return 'TROCAR_INSTITUICAO';
+  if (matchesAny(n, PONTOS_TERMS))    return 'VER_PONTOS';
+  if (matchesAny(n, PARAR_TERMS))     return 'PARAR_MARKETING';
+  if (matchesAny(n, MENU_TERMS))      return 'MENU';
+  if (matchesAny(n, AJUDA_TERMS))     return 'AJUDA';
 
   return 'FALLBACK';
 }
