@@ -106,7 +106,7 @@ export async function runStateMachine({ user, session, intent, messageText }: P)
         `${generated.short_url}\n\n`,
         institutionLine,
         '_O link tem duração de 24 horas._\n\n',
-        'Digite *MENU* para ver outras opções.',
+        'Agradecemos por usar a *Redoma*, volte sempre! 🙌',
       ].join('');
     }
 
