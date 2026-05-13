@@ -47,11 +47,9 @@ export async function runStateMachine({ user, session, intent, messageText }: P)
       const detected = identifyMarketplace(messageText);
 
       if (!detected) {
-        // Extrai a URL bruta da mensagem para incluir na notificação
         const urlMatch = messageText.match(/https?:\/\/[^\s]+/i);
         const rawUrl = urlMatch ? urlMatch[0] : messageText.slice(0, 100);
 
-        // Notifica admins — pode ser uma loja que vale atender manualmente
         notifyAdmins(
           `🛍️ *Loja não suportada*\n*Cliente:* +${user.phone_normalized}\n*Nome:* ${user.full_name}\n*Link enviado:* ${rawUrl}\n\nAtenda manualmente para não perder a venda.`
         ).catch(console.error);
@@ -92,24 +90,23 @@ export async function runStateMachine({ user, session, intent, messageText }: P)
         ].join('');
       }
 
-      // 5. Salva o link rastreável no banco
-      const generated = await createGeneratedLink({
+      // 5. Salva o registro no banco (sem tracking_code/short_url)
+      await createGeneratedLink({
         userId: user.id,
         institutionId: institution?.id ?? null,
         partnerStoreId: store?.id ?? null,
         originalUrl: productUrl,
         affiliateUrl: affiliateResult.affiliateLink,
-        appUrl: env.appUrl,
       });
 
-      // 6. Monta mensagem com nome da instituição se disponível
+      // 6. Monta mensagem com link de afiliado direto
       const institutionLine = institution
         ? `Comprando por esse link, *${institution.name}* receberá até 5% do valor da compra! 💚\n\n`
         : '✅ Compre por esse link e sua instituição recebe impacto!\n\n';
 
       return [
         `🔗 *Seu link está pronto!*\n\n`,
-        `${generated.short_url}\n\n`,
+        `${affiliateResult.affiliateLink}\n\n`,
         institutionLine,
         '_O link tem duração de 24 horas._\n\n',
         'Agradecemos por usar a *Redoma*, volte sempre! 🙌',

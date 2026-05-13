@@ -4,7 +4,6 @@
  */
 
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { nanoid } from 'nanoid';
 
 export type PartnerStore = {
   id: string;
@@ -22,7 +21,7 @@ export type GeneratedLink = {
   partner_store_id: string | null;
   original_url: string;
   affiliate_url: string | null;
-  tracking_code: string;
+  tracking_code: string | null;
   short_url: string | null;
   status: string;
   created_at: string;
@@ -62,11 +61,8 @@ export async function createGeneratedLink(params: {
   partnerStoreId: string | null;
   originalUrl: string;
   affiliateUrl: string | null;
-  appUrl: string;
 }): Promise<GeneratedLink> {
   const supabase = getSupabaseAdmin();
-  const trackingCode = nanoid(10);
-  const shortUrl = `${params.appUrl}/r/${trackingCode}`;
 
   const { data, error } = await supabase
     .from('generated_links')
@@ -76,8 +72,8 @@ export async function createGeneratedLink(params: {
       partner_store_id: params.partnerStoreId,
       original_url: params.originalUrl,
       affiliate_url: params.affiliateUrl,
-      tracking_code: trackingCode,
-      short_url: shortUrl,
+      tracking_code: null,
+      short_url: null,
       status: 'active',
     })
     .select('*')
