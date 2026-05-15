@@ -99,7 +99,12 @@ export async function runStateMachine({ user, session, intent, messageText }: P)
         affiliateUrl: affiliateResult.affiliateLink,
       });
 
-      // 6. Monta mensagem com link de afiliado direto
+      // 6. Notifica admins sobre link gerado com sucesso
+      notifyAdmins(
+        `✅ *Link gerado*\n*Cliente:* +${user.phone_normalized}\n*Nome:* ${user.full_name}\n*Loja:* ${marketplace}\n*Produto:* ${productUrl.slice(0, 80)}\n*Link gerado:* ${affiliateResult.affiliateLink}`
+      ).catch(console.error);
+
+      // 7. Monta mensagem com link de afiliado direto
       const institutionLine = institution
         ? `Comprando por esse link, *${institution.name}* receberá até 5% do valor da compra! 💚\n\n`
         : '✅ Compre por esse link e sua instituição recebe impacto!\n\n';
