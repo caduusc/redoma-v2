@@ -47,20 +47,32 @@ export async function handleIncomingWhatsAppMessage({
       await updateUserFullName(user.id, name);
       await resetBotSession(user.id);
 
+      const nameResponse = `Prazer, ${name}! 🎉\n\nAgora é só me enviar o link de qualquer produto do Mercado Livre, Amazon ou Shopee — eu gero seu link de afiliado na hora! 🛍️`;
+
       await sendWhatsAppMessage({
         to: phoneNormalized,
-        body: `Prazer, ${name}! 🎉\n\nAgora é só me enviar o link de qualquer produto do Mercado Livre, Amazon ou Shopee — eu gero seu link de afiliado na hora! 🛍️`,
+        body: nameResponse,
       });
+
+      notifyAdmins(
+        `📩 *Nova mensagem*\n*De:* Redoma Robô\n*Nome:* Redoma Robô\n*Texto:* ${nameResponse.slice(0, 300)}`
+      ).catch(console.error);
 
       return { ok: true };
     }
 
     await updateBotSession(user.id, 'awaiting_name');
 
+    const askNameResponse = 'Olá! Vejo que é sua primeira vez aqui 😊\n\nMe informe o nome que deseja ser chamado:';
+
     await sendWhatsAppMessage({
       to: phoneNormalized,
-      body: 'Olá! Vejo que é sua primeira vez aqui 😊\n\nMe informe o nome que deseja ser chamado:',
+      body: askNameResponse,
     });
+
+    notifyAdmins(
+      `📩 *Nova mensagem*\n*De:* Redoma Robô\n*Nome:* Redoma Robô\n*Texto:* ${askNameResponse.slice(0, 300)}`
+    ).catch(console.error);
 
     return { ok: true };
   }
@@ -85,10 +97,16 @@ export async function handleIncomingWhatsAppMessage({
 
   // Resposta imediata enquanto o Playwright gera o link
   if (intent === 'URL_PRODUTO') {
+    const waitMsg = '⏳ Seu link está sendo gerado, em instantes você irá receber!';
+
     await sendWhatsAppMessage({
       to: phoneNormalized,
-      body: '⏳ Seu link está sendo gerado, em instantes você irá receber!',
+      body: waitMsg,
     });
+
+    notifyAdmins(
+      `📩 *Nova mensagem*\n*De:* Redoma Robô\n*Nome:* Redoma Robô\n*Texto:* ${waitMsg}`
+    ).catch(console.error);
   }
 
   let responseText: string;
@@ -100,7 +118,6 @@ export async function handleIncomingWhatsAppMessage({
   }
 
   // Notifica admins de FALLBACK apenas quando não está no meio de um fluxo ativo
-  // (evita falsos positivos de respostas como "1", "2", "sim" dentro de fluxos)
   if (intent === 'FALLBACK' && session.current_state === 'idle') {
     notifyAdmins(
       `🚨 *Atendimento necessário*\n*Cliente:* +${phoneNormalized}\n*Nome:* ${user.full_name}\n*Mensagem:* ${text.slice(0, 100)}\n\nResponda diretamente para o número acima.`
@@ -108,6 +125,11 @@ export async function handleIncomingWhatsAppMessage({
   }
 
   const sendResult = await sendWhatsAppMessage({ to: phoneNormalized, body: responseText });
+
+  // Notifica admins com a resposta enviada ao usuário
+  notifyAdmins(
+    `📩 *Nova mensagem*\n*De:* Redoma Robô\n*Nome:* Redoma Robô\n*Texto:* ${responseText.slice(0, 300)}`
+  ).catch(console.error);
 
   await saveOutboundMessage({
     userId: user.id,
