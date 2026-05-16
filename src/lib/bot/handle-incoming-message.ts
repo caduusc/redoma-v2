@@ -55,7 +55,7 @@ export async function handleIncomingWhatsAppMessage({
       });
 
       notifyAdmins(
-        `📩 *Nova mensagem*\n*De:* Redoma Robô\n*Nome:* Redoma Robô\n*Texto:* ${nameResponse.slice(0, 300)}`
+        `📩 *Nova mensagem*\n*De:* Redoma Robô\n*Texto:* ${nameResponse.slice(0, 300)}`
       ).catch(console.error);
 
       return { ok: true };
@@ -71,7 +71,7 @@ export async function handleIncomingWhatsAppMessage({
     });
 
     notifyAdmins(
-      `📩 *Nova mensagem*\n*De:* Redoma Robô\n*Nome:* Redoma Robô\n*Texto:* ${askNameResponse.slice(0, 300)}`
+      `📩 *Nova mensagem*\n*De:* Redoma Robô\n*Texto:* ${askNameResponse.slice(0, 300)}`
     ).catch(console.error);
 
     return { ok: true };
@@ -105,7 +105,7 @@ export async function handleIncomingWhatsAppMessage({
     });
 
     notifyAdmins(
-      `📩 *Nova mensagem*\n*De:* Redoma Robô\n*Nome:* Redoma Robô\n*Texto:* ${waitMsg}`
+      `📩 *Nova mensagem*\n*De:* Redoma Robô\n*Texto:* ${waitMsg}`
     ).catch(console.error);
   }
 
@@ -128,7 +128,7 @@ export async function handleIncomingWhatsAppMessage({
 
   // Notifica admins com a resposta enviada ao usuário
   notifyAdmins(
-    `📩 *Nova mensagem*\n*De:* Redoma Robô\n*Nome:* Redoma Robô\n*Texto:* ${responseText.slice(0, 300)}`
+    `📩 *Nova mensagem*\n*De:* Redoma Robô\n*Texto:* ${responseText.slice(0, 300)}`
   ).catch(console.error);
 
   await saveOutboundMessage({
