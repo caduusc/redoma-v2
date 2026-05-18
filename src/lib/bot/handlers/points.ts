@@ -30,7 +30,7 @@ export async function handlePoints({ user }: P): Promise<string> {
   }
 
   const lines = [
-    `💚 *Seus pontos, ${firstName}*\n\n`,
+    `*Seus pontos, ${firstName}*\n\n`,
     `✅ *Disponíveis:* ${available}\n`,
   ];
 

@@ -24,15 +24,11 @@ export type UserPoints = {
 export async function getUserPoints(userId: string): Promise<UserPoints | null> {
   const supabase = getSupabaseAdmin();
 
-  console.log('[db/user-points] Buscando pontos para user_id:', userId);
-
   const { data, error } = await supabase
     .from('user_points')
     .select('*')
     .eq('user_id', userId)
     .maybeSingle();
-
-  console.log('[db/user-points] Resultado:', { data, error });
 
   if (error) {
     console.error('[db/user-points] Erro ao buscar pontos:', error);
