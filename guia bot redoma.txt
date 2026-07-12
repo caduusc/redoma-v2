@@ -1,0 +1,24 @@
+1- Mata o Chrome (caso esteja aberto):
+
+powershelltaskkill /F /IM chrome.exe /T
+Aguarda uns 5 segundos.
+
+2- Abre o Chrome de debug:
+
+powershell& "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\Users\carlos\OneDrive\Desktop\bot redoma\redoma-bot\chrome_debug_profile"
+
+Confirma que está logado nos marketplaces que usam Playwright (Mercado Livre, Amazon, Magalu). Pra Shopee não precisa (vai via API).
+
+3- Inicia o bot Python (no terminal do VS Code ou PowerShell):
+
+powershellcd "C:\Users\carlos\OneDrive\Desktop\bot redoma\redoma-bot"
+.venv\Scripts\activate
+python api.py
+Espera aparecer Browser pronto. API aguardando requisições.
+
+4- Inicia o ngrok (em outro terminal):
+
+powershellngrok http --domain=directed-brute-ramp.ngrok-free.dev 8001
+
+Pronto. O bot está rodando. Manda uma mensagem pelo WhatsApp pra testar.
+Opus 4.7 Extra
